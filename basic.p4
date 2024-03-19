@@ -2,6 +2,10 @@
 #include <core.p4>
 #include <v1model.p4>
 
+/*************************************************************************
+ ***********************  C O N S T A N T S  *****************************
+ *************************************************************************/
+      /*  Define the useful global constants for your program */
 const bit<16> TYPE_IPV4 = 0x800;
 const bit<16> TYPE_ARP  = 0x0806;
 const bit<16> ARP_HTYPE_ETHERNET = 0x0001;
@@ -10,6 +14,7 @@ const bit<8>  ARP_HLEN_ETHERNET  = 6;
 const bit<8>  ARP_PLEN_IPV4      = 4;
 const bit<16> ARP_OPER_REQUEST   = 1;
 const bit<16> ARP_OPER_REPLY     = 2;
+
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
@@ -39,6 +44,7 @@ header ipv4_t {
     ip4Addr_t dstAddr;
 }
 
+
 header arp_t {
     bit<16> htype;
     bit<16> ptype;
@@ -51,15 +57,21 @@ header arp_t {
     ip4Addr_t dstIPAddr;
     }
 
-struct metadata {
-    ip4Addr_t  dst_ipv4;
-}
 
 struct headers {
     ethernet_t   ethernet;
     ipv4_t       ipv4;
     arp_t        arp;
 }
+
+/*************************************************************************
+ ***********************  M E T A D A T A  *******************************
+ *************************************************************************/
+ 
+struct metadata {
+    ip4Addr_t  dst_ipv4;
+}
+
 
 /*************************************************************************
 *********************** P A R S E R  ***********************************
@@ -136,9 +148,39 @@ control MyIngress(inout headers hdr,
         default_action = NoAction();
     }
 
+    action send_arp_reply(macAddr_t macAddr, ip4Addr_t IPAddr) {
+        hdr.ethernet.dstAddr = hdr.arp.srcMACAddr; 
+        hdr.ethernet.srcAddr = macAddr;
+
+         hdr.arp.oper = ARP_OPER_REPLY;
+
+         hdr.arp.dstMACAddr = hdr.arp.srcMACAddr;
+         hdr.arp.dstIPAddr = hdr.arp.srcIPAddr;
+         hdr.arp.srcMACAddr = macAddr;
+         hdr.arp.srcIPAddr = IPAddr;
+
+        standard_metadata.egress_spec = standard_metadata.ingress_port;
+        }
+
+    table arp_ternary {
+        key = {
+            hdr.arp.oper : exact;
+            hdr.arp.dstIPAddr : lpm;
+            }
+        actions = {
+            send_arp_reply;
+            drop;
+            }
+        const default_action = drop();
+    }
+
     apply {
-        if (hdr.ipv4.isValid()) {
+
+        if(hdr.ethernet.etherType == TYPE_IPV4) {
             ipv4_lpm.apply();
+        }
+        else if(hdr.ethernet.etherType == TYPE_ARP) {
+            arp_ternary.apply();
         }
     }
 
@@ -185,8 +227,13 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
 
 control MyDeparser(packet_out packet, in headers hdr) {
     apply {
+
         packet.emit(hdr.ethernet);
+
+        packet.emit(hdr.arp);
+
         packet.emit(hdr.ipv4);
+
     }
 }
 
