@@ -249,12 +249,9 @@ def main(p4info_file_path, bmv2_file_path):
                count1=pcount1
                with open('s1s2.txt', 'a') as file:
                     file.write('----- s1->s2 -----\n')
-                    file.write('"s1 sends two packets, counter number 100"\n')
-                    file.write('"s2 receives two packets, counter number 100"\n')
-                    
+                    file.write('s1 send 2 packets,on 100\n')
                     file.write('----- s2->s1 -----\n')
-                    file.write('s2 sends two packets, counter number 150\n')
-                    file.write('s1 receives two packets, counter number 150\n')
+                    file.write('s2 send 2 packets,on 150\n')
                     
             print('----- s2->s3 -----')
             pcount3 =printCounter(p4info_helper, s2, "MyIngress.ingressTunnelCounter", 200)
@@ -266,11 +263,9 @@ def main(p4info_file_path, bmv2_file_path):
                count3=pcount3
                with open('s2s3.txt', 'a') as file:
                    file.write('----- s2->s3 -----\n')
-                   file.write('s2 sends two packets, counter number 200\n')
-                   file.write('s3 receives two packets, counter number 200\n')
+                   file.write('s2 send 2 packets,on 200\n')
                    file.write('----- s3->s2 -----\n')
-                   file.write('s3 sends two packets, counter number 250\n')
-                   file.write('s2 receives two packets, counter number 250\n')
+                   file.write('s3 send 2 packets,on 250\n')
             print('----- s1->s3 -----')
             pcount5=printCounter(p4info_helper, s1, "MyIngress.ingressTunnelCounter", 300)
             printCounter(p4info_helper, s3, "MyIngress.egressTunnelCounter", 300)
@@ -281,11 +276,9 @@ def main(p4info_file_path, bmv2_file_path):
                count5=pcount5
                with open('s1s3.txt', 'a') as file:
                    file.write('----- s1->s3 -----\n')
-                   file.write('s1 sends two packets, counter number 300\n')
-                   file.write('s3 receives two packets, counter number 300\n')
+                   file.write('s1 send 2 packets,on 300\n')
                    file.write('----- s3->s1 -----\n')
-                   file.write('s3 sends two packets, counter number 350\n')
-                   file.write('s1 receives two packets, counter number 350\n')
+                   file.write('s3 send 2 packets,on 350\n')
 
     except KeyboardInterrupt:
         print(" Shutting down.")
