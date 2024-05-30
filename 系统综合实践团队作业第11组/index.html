@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Line Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>
+  <style>
+    .send-button {
+      margin-left: 10px;
+      margin-bottom: 10px;
+      background-color: aquamarine;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      border: 1px solid black;
+      text-align: center;
+      padding: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="display: flex; justify-content: center; margin-top: 20px">
+    <!-- 第一列 -->
+    <div style="flex: 1;">
+      <div style="float: left;">
+        <span style="margin-left: 280px; font-size: 30px">Intercept record</span>
+        <table style="width: 700px; margin-bottom: 50px">
+          <tr>
+            <th style="width: 60px; text-align: center">destination_ips</th>
+            <th style="width: 180px; text-align: center">source_ips</th>
+            <th style="width: 180px; text-align: center">ecn</th>
+            <th style="width: 80px; text-align: center">file_name</th>
+            <th style="width: 200px; text-align: center">tcp_count</th>
+            <th style="width: 200px; text-align: center">udp_count</th>
+          </tr>
+          <!-- 表格数据待填充 -->
+        </table>
+      </div>
+    </div>
+
+    <!-- 第二列 -->
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+      <img src="" alt="" style="width: 600px; height: auto">
+      <div style="display: flex; justify-content: center;margin-top: 100px">
+        <div style="width: 750px;height: 400px;" id="line"></div>
+      </div>
+    </div>
+   
+
+
+
+
+  <script>
+    let list1 = []; 
+    const list2 = [];
+    window.onload = function() {
+  let count = 0;  // 计数器，记录发送请求的次数
+  const maxAttempts = 30;  // 最多发送请求的次数
+  let list1 = [];  // 声明list1为一个变量，以便能够在每次获取到新数据时覆盖原数据
+
+  const fetchData = () => {
+    fetch('http://127.0.0.1:5000/read_json', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ /* 如果需要传递其他数据，可以在这里添加属性 */ })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // 处理从后端获取的数据，并更新页面
+      console.log(data);
+      if (data) {
+        list1 = data.test_list[0];  // 将获取到的新数据直接赋值给list1，覆盖原数据
+        console.log('list1:', list1);
+        updateTable(list1);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+
+    count++;  // 每发送一次请求，计数器加一
+
+    if (count >= maxAttempts) {
+      clearInterval(intervalId);  // 达到最大尝试次数时清除定时器
+    }
+  };
+
+  fetchData();  // 页面加载时立即发送一次请求
+
+  const intervalId = setInterval(fetchData, 1000);  // 每隔一秒钟发送一次请求
+};
+
+
+
+  function updateTable(dataList) {
+  const table = document.querySelector('table');
+
+  // 清空表格数据
+  table.querySelectorAll('tr:not(:first-child)').forEach(row => row.remove());
+
+  // 遍历数据列表，生成新的表格行
+  dataList.forEach(data => {
+    const row = table.insertRow(-1);
+    const cell1 = row.insertCell(0);
+    const cell2 = row.insertCell(1);
+    const cell3 = row.insertCell(2);
+    const cell4 = row.insertCell(3);
+    const cell5 = row.insertCell(4);
+    const cell6 = row.insertCell(5);
+
+    cell1.textContent = data.destination_ips;
+    cell2.textContent = data.source_ips;
+    cell3.textContent = data.ecn;
+    cell4.textContent = data.file_name;
+    cell5.textContent = data.tcp_count;
+    cell6.textContent = data.udp_count;
+  });
+}
+      
+      const option = {
+      title: {
+        text: 'BPS'
+      },
+      tooltip: {
+        trigger: 'axis'
+      },
+      legend: {
+        data: ['S1-P1', 'S1-P2', 'S2-P1', 'S2-P2', 'S3-P1', 'S3-P2', 'S4-P1', 'S4-P2']
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '5%',
+        containLabel: true
+      },
+      toolbox: {
+        feature: {
+          dataView: {} // 数据视图
+        }
+      },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+      },
+      yAxis: {
+        type: 'value'
+      },
+      series: [{
+          name: 'S1-P1',
+          type: 'line',
+          stack: 'Total',
+          data: [120, 132, 101, 134, 90, 230, 210]
+        },
+        {
+          name: 'S1-P2',
+          type: 'line',
+          stack: 'Total',
+          data: [220, 232, 201, 234, 190, 130, 110]
+        },
+        {
+          name: 'S2-P1',
+          type: 'line',
+          stack: 'Total',
+          data: [220, 182, 191, 234, 290, 330, 310]
+        },
+        {
+          name: 'S2-P2',
+          type: 'line',
+          stack: 'Total',
+          data: [120, 82, 91, 34, 90, 30, 10]
+        },
+        {
+          name: 'S3-P1',
+          type: 'line',
+          stack: 'Total',
+          data: [150, 232, 201, 154, 190, 330, 410]
+        },
+        {
+          name: 'S3-P2',
+          type: 'line',
+          stack: 'Total',
+          data: [50, 32, 301, 54, 90, 30, 10]
+        },
+        {
+          name: 'S4-P1',
+          type: 'line',
+          stack: 'Total',
+          data: [320, 332, 301, 334, 390, 330, 320]
+        },
+        {
+          name: 'S4-P2',
+          type: 'line',
+          stack: 'Total',
+          data: [220, 232, 201, 234, 290, 230, 220]
+        },
+      ]
+    };
+
+    let lineDom = document.getElementById('line');
+    let lineChart = echarts.init(lineDom);
+    lineChart.setOption(option);
+  </script>
+
+</body>
+
+</html>
